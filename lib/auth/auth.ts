@@ -39,7 +39,7 @@ export const auth = betterAuth({
   },
 
   advanced:{
-    cookiePrefix: 'ecommerce'
+    cookiePrefix: 'words'
   },
 
   socialProviders:{
@@ -52,7 +52,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "facebook", "email-password"],
+      trustedProviders: ["google", "email-password"],
       allowDifferentEmails: false,
     },
   },

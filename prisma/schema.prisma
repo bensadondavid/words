@@ -18,6 +18,7 @@ model User {
   role          String?   @default("CLIENT")
   sessions      Session[]
   accounts      Account[]
+  lists         List[]
 
   passkeys Passkey[]
 
@@ -92,3 +93,42 @@ model Passkey {
   @@map("passkey")
 }
 
+model List {
+  id       String @id @default(cuid())
+  name     String
+  language String
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  words Word[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Word {
+  id       String  @id @default(cuid())
+  text     String
+  language String
+  note     String?
+  listId   String
+  list     List    @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  translations Translation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Translation {
+  id       String  @id @default(cuid())
+  text     String
+  language String
+  note     String?
+  wordId   String
+
+  word Word @relation(fields: [wordId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

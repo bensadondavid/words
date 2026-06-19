@@ -61,3 +61,23 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Verification = Prisma.VerificationModel
+/**
+ * Model Passkey
+ * 
+ */
+export type Passkey = Prisma.PasskeyModel
+/**
+ * Model List
+ * 
+ */
+export type List = Prisma.ListModel
+/**
+ * Model Word
+ * 
+ */
+export type Word = Prisma.WordModel
+/**
+ * Model Translation
+ * 
+ */
+export type Translation = Prisma.TranslationModel
