@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../database/prisma";
 import { passkey } from "@better-auth/passkey"
+import { resend } from "../mail/resend";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL!,
@@ -12,30 +13,43 @@ export const auth = betterAuth({
   }),
 
   trustedOrigins: [
-    "http://localhost:3000",
+    "http://localhost:3001",
     process.env.BETTER_AUTH_URL!,
   ],
-
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        defaultValue: "CLIENT",
-        input: false,
-      },
-    },
-  },
 
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
     minPasswordLength: 8,
     maxPasswordLength: 120,
+    sendResetPassword: async({user, url})=>{
+      await resend.emails.send({
+        from: process.env.RESEND_MAIL || "onboarding@resend.dev",
+        to: user.email,
+        subject: 'Réinitialisation de mot de passe', 
+        html: `
+        <p>Salut ${user.name ?? ""}, </p>
+        <p>Clique ici pour réinitialiser ton mot de passe : </p>
+        <a href="${url}">Réinitialiser mon mot de passe </a> 
+        `
+      })
+    }
   },
 
   emailVerification:{
     sendOnSignUp: true,
     autoSignInAfterVerification: true, 
+    sendVerificationEmail: async({user, url})=>{
+      await resend.emails.send({
+       from: process.env.RESEND_MAIL || "onboarding@resend.dev",
+        to: user.email,
+        subject: "Vérifie ton email",
+        html: `
+          <p>Salut ${user.name ?? ""},</p>
+          <p>Clique ici pour vérifier ton email :</p>
+          <a href="${url}">Vérifier mon email</a>`,
+        })
+      }
   },
 
   advanced:{
@@ -52,7 +66,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "email-password"],
+      trustedProviders: ["google"],
       allowDifferentEmails: false,
     },
   },
