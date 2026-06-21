@@ -21,7 +21,7 @@ export default function SignUp() {
     const handleGoogle = async () => {
         try {
             setIsGoogleLoading(true)
-            await authClient.signIn.social({ provider: "google", callbackURL: "/lists" })
+            await authClient.signIn.social({ provider: "google", callbackURL: "/account" })
         } catch {
             toast.error('Erreur avec Google')
         } finally {

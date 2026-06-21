@@ -9,12 +9,20 @@ export default function Parameters() {
 
   const router = useRouter()
 
+
     const addPasskey = async ()=>{
         const { data, error } =  await authClient.passkey.addPasskey({
         name: "example-passkey-name",
         authenticatorAttachment: "platform",
         });
+        if(error){
+          toast.error(error.message)
+        }
+        toast.success('Passkey créée')
+        console.log(data)
     }
+
+    const passkeys = authClient.useListPasskeys()
 
     const logOut = async()=>{
       const result = await authClient.signOut()
@@ -28,6 +36,9 @@ export default function Parameters() {
     <div>
       <Button onClick={addPasskey}>Ajouter une clé</Button>
       <Button onClick={logOut}>Deconnexion</Button>
+      <p>
+        {passkeys.data?.map((p)=>p.name)}
+      </p>
     </div>
   )
 }

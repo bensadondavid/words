@@ -24,7 +24,7 @@ export default function Login() {
     const handleGoogle = async () => {
         try {
             setIsGoogleLoading(true)
-            await authClient.signIn.social({ provider: "google", callbackURL: "/lists" })
+            await authClient.signIn.social({ provider: "google", callbackURL: "/account" })
         } catch {
             toast.error('Erreur avec Google')
         } finally {
@@ -38,7 +38,7 @@ export default function Login() {
             const result = await authClient.signIn.passkey()
             if (result?.error) return toast.error(result.error.message)
             toast.success('Connecté !')
-            router.push('/lists')
+            router.push('/account')
         } catch {
             toast.error('Erreur avec le passkey')
         } finally {
@@ -53,7 +53,7 @@ export default function Login() {
             const result = await authClient.signIn.email({ email, password })
             if (result.error) return toast.error(result.error.message)
             toast.success('Connecté !')
-            setTimeout(() => router.push('/lists'), 800)
+            setTimeout(() => router.push('/account'), 800)
         } catch {
             toast.error('Une erreur est survenue')
         } finally {
