@@ -1,44 +1,8 @@
-'use client'
+import ParametersPage from '@/components/pages/ParametersPage';
 
-import { Button } from '@/components/ui/button';
-import { authClient } from '../../../lib/auth/auth-client';
-import { useRouter } from 'next/navigation';
-import {toast} from 'sonner'
-
-export default function Parameters() {
-
-  const router = useRouter()
-
-
-    const addPasskey = async ()=>{
-        const { data, error } =  await authClient.passkey.addPasskey({
-        name: "example-passkey-name",
-        authenticatorAttachment: "platform",
-        });
-        if(error){
-          toast.error(error.message)
-        }
-        toast.success('Passkey créée')
-        console.log(data)
-    }
-
-    const passkeys = authClient.useListPasskeys()
-
-    const logOut = async()=>{
-      const result = await authClient.signOut()
-      if(!result.data?.success){
-        return toast.error(result.error?.message)
-      }
-      router.push('/login')
-    }
+export default async function Parameters() {
 
   return (
-    <div>
-      <Button onClick={addPasskey}>Ajouter une clé</Button>
-      <Button onClick={logOut}>Deconnexion</Button>
-      <p>
-        {passkeys.data?.map((p)=>p.name)}
-      </p>
-    </div>
+    <ParametersPage />
   )
 }
