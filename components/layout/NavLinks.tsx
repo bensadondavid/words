@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpen } = useSidebar();
   const pathname = usePathname();
 
   return (
@@ -18,7 +18,7 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
         <Link
           href={href}
           onClick={() => {
-            if (isMobile) setOpenMobile(false);
+            setOpen(false)
           }}
         >
           {children}
