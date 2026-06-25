@@ -77,7 +77,12 @@ export type List = Prisma.ListModel
  */
 export type Word = Prisma.WordModel
 /**
- * Model Translation
+ * Model TranslationWord
  * 
  */
-export type Translation = Prisma.TranslationModel
+export type TranslationWord = Prisma.TranslationWordModel
+/**
+ * Model TranslationLists
+ * 
+ */
+export type TranslationLists = Prisma.TranslationListsModel

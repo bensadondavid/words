@@ -192,6 +192,7 @@ export type ListWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"List"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   words?: Prisma.WordListRelationFilter
+  translationLists?: Prisma.TranslationListsListRelationFilter
 }
 
 export type ListOrderByWithRelationInput = {
@@ -203,6 +204,7 @@ export type ListOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   words?: Prisma.WordOrderByRelationAggregateInput
+  translationLists?: Prisma.TranslationListsOrderByRelationAggregateInput
 }
 
 export type ListWhereUniqueInput = Prisma.AtLeast<{
@@ -217,6 +219,7 @@ export type ListWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"List"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   words?: Prisma.WordListRelationFilter
+  translationLists?: Prisma.TranslationListsListRelationFilter
 }, "id">
 
 export type ListOrderByWithAggregationInput = {
@@ -251,6 +254,7 @@ export type ListCreateInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutListsInput
   words?: Prisma.WordCreateNestedManyWithoutListInput
+  translationLists?: Prisma.TranslationListsCreateNestedManyWithoutListInput
 }
 
 export type ListUncheckedCreateInput = {
@@ -261,6 +265,7 @@ export type ListUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   words?: Prisma.WordUncheckedCreateNestedManyWithoutListInput
+  translationLists?: Prisma.TranslationListsUncheckedCreateNestedManyWithoutListInput
 }
 
 export type ListUpdateInput = {
@@ -271,6 +276,7 @@ export type ListUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutListsNestedInput
   words?: Prisma.WordUpdateManyWithoutListNestedInput
+  translationLists?: Prisma.TranslationListsUpdateManyWithoutListNestedInput
 }
 
 export type ListUncheckedUpdateInput = {
@@ -281,6 +287,7 @@ export type ListUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   words?: Prisma.WordUncheckedUpdateManyWithoutListNestedInput
+  translationLists?: Prisma.TranslationListsUncheckedUpdateManyWithoutListNestedInput
 }
 
 export type ListCreateManyInput = {
@@ -346,6 +353,11 @@ export type ListMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type ListNullableScalarRelationFilter = {
+  is?: Prisma.ListWhereInput | null
+  isNot?: Prisma.ListWhereInput | null
+}
+
 export type ListScalarRelationFilter = {
   is?: Prisma.ListWhereInput
   isNot?: Prisma.ListWhereInput
@@ -399,12 +411,28 @@ export type ListCreateNestedOneWithoutWordsInput = {
   connect?: Prisma.ListWhereUniqueInput
 }
 
-export type ListUpdateOneRequiredWithoutWordsNestedInput = {
+export type ListUpdateOneWithoutWordsNestedInput = {
   create?: Prisma.XOR<Prisma.ListCreateWithoutWordsInput, Prisma.ListUncheckedCreateWithoutWordsInput>
   connectOrCreate?: Prisma.ListCreateOrConnectWithoutWordsInput
   upsert?: Prisma.ListUpsertWithoutWordsInput
+  disconnect?: Prisma.ListWhereInput | boolean
+  delete?: Prisma.ListWhereInput | boolean
   connect?: Prisma.ListWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ListUpdateToOneWithWhereWithoutWordsInput, Prisma.ListUpdateWithoutWordsInput>, Prisma.ListUncheckedUpdateWithoutWordsInput>
+}
+
+export type ListCreateNestedOneWithoutTranslationListsInput = {
+  create?: Prisma.XOR<Prisma.ListCreateWithoutTranslationListsInput, Prisma.ListUncheckedCreateWithoutTranslationListsInput>
+  connectOrCreate?: Prisma.ListCreateOrConnectWithoutTranslationListsInput
+  connect?: Prisma.ListWhereUniqueInput
+}
+
+export type ListUpdateOneRequiredWithoutTranslationListsNestedInput = {
+  create?: Prisma.XOR<Prisma.ListCreateWithoutTranslationListsInput, Prisma.ListUncheckedCreateWithoutTranslationListsInput>
+  connectOrCreate?: Prisma.ListCreateOrConnectWithoutTranslationListsInput
+  upsert?: Prisma.ListUpsertWithoutTranslationListsInput
+  connect?: Prisma.ListWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ListUpdateToOneWithWhereWithoutTranslationListsInput, Prisma.ListUpdateWithoutTranslationListsInput>, Prisma.ListUncheckedUpdateWithoutTranslationListsInput>
 }
 
 export type ListCreateWithoutUserInput = {
@@ -414,6 +442,7 @@ export type ListCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   words?: Prisma.WordCreateNestedManyWithoutListInput
+  translationLists?: Prisma.TranslationListsCreateNestedManyWithoutListInput
 }
 
 export type ListUncheckedCreateWithoutUserInput = {
@@ -423,6 +452,7 @@ export type ListUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   words?: Prisma.WordUncheckedCreateNestedManyWithoutListInput
+  translationLists?: Prisma.TranslationListsUncheckedCreateNestedManyWithoutListInput
 }
 
 export type ListCreateOrConnectWithoutUserInput = {
@@ -470,6 +500,7 @@ export type ListCreateWithoutWordsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutListsInput
+  translationLists?: Prisma.TranslationListsCreateNestedManyWithoutListInput
 }
 
 export type ListUncheckedCreateWithoutWordsInput = {
@@ -479,6 +510,7 @@ export type ListUncheckedCreateWithoutWordsInput = {
   userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  translationLists?: Prisma.TranslationListsUncheckedCreateNestedManyWithoutListInput
 }
 
 export type ListCreateOrConnectWithoutWordsInput = {
@@ -504,6 +536,7 @@ export type ListUpdateWithoutWordsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutListsNestedInput
+  translationLists?: Prisma.TranslationListsUpdateManyWithoutListNestedInput
 }
 
 export type ListUncheckedUpdateWithoutWordsInput = {
@@ -513,6 +546,63 @@ export type ListUncheckedUpdateWithoutWordsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  translationLists?: Prisma.TranslationListsUncheckedUpdateManyWithoutListNestedInput
+}
+
+export type ListCreateWithoutTranslationListsInput = {
+  id?: string
+  name: string
+  language: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutListsInput
+  words?: Prisma.WordCreateNestedManyWithoutListInput
+}
+
+export type ListUncheckedCreateWithoutTranslationListsInput = {
+  id?: string
+  name: string
+  language: string
+  userId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  words?: Prisma.WordUncheckedCreateNestedManyWithoutListInput
+}
+
+export type ListCreateOrConnectWithoutTranslationListsInput = {
+  where: Prisma.ListWhereUniqueInput
+  create: Prisma.XOR<Prisma.ListCreateWithoutTranslationListsInput, Prisma.ListUncheckedCreateWithoutTranslationListsInput>
+}
+
+export type ListUpsertWithoutTranslationListsInput = {
+  update: Prisma.XOR<Prisma.ListUpdateWithoutTranslationListsInput, Prisma.ListUncheckedUpdateWithoutTranslationListsInput>
+  create: Prisma.XOR<Prisma.ListCreateWithoutTranslationListsInput, Prisma.ListUncheckedCreateWithoutTranslationListsInput>
+  where?: Prisma.ListWhereInput
+}
+
+export type ListUpdateToOneWithWhereWithoutTranslationListsInput = {
+  where?: Prisma.ListWhereInput
+  data: Prisma.XOR<Prisma.ListUpdateWithoutTranslationListsInput, Prisma.ListUncheckedUpdateWithoutTranslationListsInput>
+}
+
+export type ListUpdateWithoutTranslationListsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutListsNestedInput
+  words?: Prisma.WordUpdateManyWithoutListNestedInput
+}
+
+export type ListUncheckedUpdateWithoutTranslationListsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  words?: Prisma.WordUncheckedUpdateManyWithoutListNestedInput
 }
 
 export type ListCreateManyUserInput = {
@@ -530,6 +620,7 @@ export type ListUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   words?: Prisma.WordUpdateManyWithoutListNestedInput
+  translationLists?: Prisma.TranslationListsUpdateManyWithoutListNestedInput
 }
 
 export type ListUncheckedUpdateWithoutUserInput = {
@@ -539,6 +630,7 @@ export type ListUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   words?: Prisma.WordUncheckedUpdateManyWithoutListNestedInput
+  translationLists?: Prisma.TranslationListsUncheckedUpdateManyWithoutListNestedInput
 }
 
 export type ListUncheckedUpdateManyWithoutUserInput = {
@@ -556,10 +648,12 @@ export type ListUncheckedUpdateManyWithoutUserInput = {
 
 export type ListCountOutputType = {
   words: number
+  translationLists: number
 }
 
 export type ListCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   words?: boolean | ListCountOutputTypeCountWordsArgs
+  translationLists?: boolean | ListCountOutputTypeCountTranslationListsArgs
 }
 
 /**
@@ -579,6 +673,13 @@ export type ListCountOutputTypeCountWordsArgs<ExtArgs extends runtime.Types.Exte
   where?: Prisma.WordWhereInput
 }
 
+/**
+ * ListCountOutputType without action
+ */
+export type ListCountOutputTypeCountTranslationListsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TranslationListsWhereInput
+}
+
 
 export type ListSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -589,6 +690,7 @@ export type ListSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   words?: boolean | Prisma.List$wordsArgs<ExtArgs>
+  translationLists?: boolean | Prisma.List$translationListsArgs<ExtArgs>
   _count?: boolean | Prisma.ListCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["list"]>
 
@@ -625,6 +727,7 @@ export type ListOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
 export type ListInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   words?: boolean | Prisma.List$wordsArgs<ExtArgs>
+  translationLists?: boolean | Prisma.List$translationListsArgs<ExtArgs>
   _count?: boolean | Prisma.ListCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ListIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -639,6 +742,7 @@ export type $ListPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     words: Prisma.$WordPayload<ExtArgs>[]
+    translationLists: Prisma.$TranslationListsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1043,6 +1147,7 @@ export interface Prisma__ListClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   words<T extends Prisma.List$wordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.List$wordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  translationLists<T extends Prisma.List$translationListsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.List$translationListsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TranslationListsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1500,6 +1605,30 @@ export type List$wordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
   take?: number
   skip?: number
   distinct?: Prisma.WordScalarFieldEnum | Prisma.WordScalarFieldEnum[]
+}
+
+/**
+ * List.translationLists
+ */
+export type List$translationListsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TranslationLists
+   */
+  select?: Prisma.TranslationListsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TranslationLists
+   */
+  omit?: Prisma.TranslationListsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TranslationListsInclude<ExtArgs> | null
+  where?: Prisma.TranslationListsWhereInput
+  orderBy?: Prisma.TranslationListsOrderByWithRelationInput | Prisma.TranslationListsOrderByWithRelationInput[]
+  cursor?: Prisma.TranslationListsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TranslationListsScalarFieldEnum | Prisma.TranslationListsScalarFieldEnum[]
 }
 
 /**

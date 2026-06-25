@@ -100,7 +100,8 @@ model List {
   userId   String
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  words Word[]
+  words            Word[]
+  translationLists TranslationLists[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -111,16 +112,16 @@ model Word {
   text     String
   language String
   note     String?
-  listId   String
-  list     List    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId   String?
+  list     List?    @relation(fields: [listId], references: [id], onDelete: Cascade)
 
-  translations Translation[]
+  translationsWords TranslationWord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Translation {
+model TranslationWord {
   id       String  @id @default(cuid())
   text     String
   language String
@@ -128,6 +129,18 @@ model Translation {
   wordId   String
 
   word Word @relation(fields: [wordId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TranslationLists {
+  id       String  @id @default(cuid())
+  language String
+  note     String?
+  listId   String
+
+  list List @relation(fields: [listId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

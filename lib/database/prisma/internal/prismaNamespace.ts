@@ -391,7 +391,8 @@ export const ModelName = {
   Passkey: 'Passkey',
   List: 'List',
   Word: 'Word',
-  Translation: 'Translation'
+  TranslationWord: 'TranslationWord',
+  TranslationLists: 'TranslationLists'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "passkey" | "list" | "word" | "translation"
+    modelProps: "user" | "session" | "account" | "verification" | "passkey" | "list" | "word" | "translationWord" | "translationLists"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -929,77 +930,151 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    Translation: {
-      payload: Prisma.$TranslationPayload<ExtArgs>
-      fields: Prisma.TranslationFieldRefs
+    TranslationWord: {
+      payload: Prisma.$TranslationWordPayload<ExtArgs>
+      fields: Prisma.TranslationWordFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.TranslationFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload> | null
+          args: Prisma.TranslationWordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.TranslationFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         findFirst: {
-          args: Prisma.TranslationFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload> | null
+          args: Prisma.TranslationWordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.TranslationFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         findMany: {
-          args: Prisma.TranslationFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>[]
+          args: Prisma.TranslationWordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>[]
         }
         create: {
-          args: Prisma.TranslationCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         createMany: {
-          args: Prisma.TranslationCreateManyArgs<ExtArgs>
+          args: Prisma.TranslationWordCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.TranslationCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>[]
+          args: Prisma.TranslationWordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>[]
         }
         delete: {
-          args: Prisma.TranslationDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         update: {
-          args: Prisma.TranslationUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         deleteMany: {
-          args: Prisma.TranslationDeleteManyArgs<ExtArgs>
+          args: Prisma.TranslationWordDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.TranslationUpdateManyArgs<ExtArgs>
+          args: Prisma.TranslationWordUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.TranslationUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>[]
+          args: Prisma.TranslationWordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>[]
         }
         upsert: {
-          args: Prisma.TranslationUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationPayload>
+          args: Prisma.TranslationWordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationWordPayload>
         }
         aggregate: {
-          args: Prisma.TranslationAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateTranslation>
+          args: Prisma.TranslationWordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTranslationWord>
         }
         groupBy: {
-          args: Prisma.TranslationGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TranslationGroupByOutputType>[]
+          args: Prisma.TranslationWordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TranslationWordGroupByOutputType>[]
         }
         count: {
-          args: Prisma.TranslationCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TranslationCountAggregateOutputType> | number
+          args: Prisma.TranslationWordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TranslationWordCountAggregateOutputType> | number
+        }
+      }
+    }
+    TranslationLists: {
+      payload: Prisma.$TranslationListsPayload<ExtArgs>
+      fields: Prisma.TranslationListsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TranslationListsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TranslationListsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        findFirst: {
+          args: Prisma.TranslationListsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TranslationListsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        findMany: {
+          args: Prisma.TranslationListsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>[]
+        }
+        create: {
+          args: Prisma.TranslationListsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        createMany: {
+          args: Prisma.TranslationListsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TranslationListsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>[]
+        }
+        delete: {
+          args: Prisma.TranslationListsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        update: {
+          args: Prisma.TranslationListsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        deleteMany: {
+          args: Prisma.TranslationListsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TranslationListsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TranslationListsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>[]
+        }
+        upsert: {
+          args: Prisma.TranslationListsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TranslationListsPayload>
+        }
+        aggregate: {
+          args: Prisma.TranslationListsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTranslationLists>
+        }
+        groupBy: {
+          args: Prisma.TranslationListsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TranslationListsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TranslationListsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TranslationListsCountAggregateOutputType> | number
         }
       }
     }
@@ -1048,6 +1123,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   emailVerified: 'emailVerified',
   image: 'image',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1142,7 +1218,7 @@ export const WordScalarFieldEnum = {
 export type WordScalarFieldEnum = (typeof WordScalarFieldEnum)[keyof typeof WordScalarFieldEnum]
 
 
-export const TranslationScalarFieldEnum = {
+export const TranslationWordScalarFieldEnum = {
   id: 'id',
   text: 'text',
   language: 'language',
@@ -1152,7 +1228,19 @@ export const TranslationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 } as const
 
-export type TranslationScalarFieldEnum = (typeof TranslationScalarFieldEnum)[keyof typeof TranslationScalarFieldEnum]
+export type TranslationWordScalarFieldEnum = (typeof TranslationWordScalarFieldEnum)[keyof typeof TranslationWordScalarFieldEnum]
+
+
+export const TranslationListsScalarFieldEnum = {
+  id: 'id',
+  language: 'language',
+  note: 'note',
+  listId: 'listId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TranslationListsScalarFieldEnum = (typeof TranslationListsScalarFieldEnum)[keyof typeof TranslationListsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1364,7 +1452,8 @@ export type GlobalOmitConfig = {
   passkey?: Prisma.PasskeyOmit
   list?: Prisma.ListOmit
   word?: Prisma.WordOmit
-  translation?: Prisma.TranslationOmit
+  translationWord?: Prisma.TranslationWordOmit
+  translationLists?: Prisma.TranslationListsOmit
 }
 
 /* Types for Logging */

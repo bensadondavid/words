@@ -58,7 +58,8 @@ export const ModelName = {
   Passkey: 'Passkey',
   List: 'List',
   Word: 'Word',
-  Translation: 'Translation'
+  TranslationWord: 'TranslationWord',
+  TranslationLists: 'TranslationLists'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -83,6 +84,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   emailVerified: 'emailVerified',
   image: 'image',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -177,7 +179,7 @@ export const WordScalarFieldEnum = {
 export type WordScalarFieldEnum = (typeof WordScalarFieldEnum)[keyof typeof WordScalarFieldEnum]
 
 
-export const TranslationScalarFieldEnum = {
+export const TranslationWordScalarFieldEnum = {
   id: 'id',
   text: 'text',
   language: 'language',
@@ -187,7 +189,19 @@ export const TranslationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 } as const
 
-export type TranslationScalarFieldEnum = (typeof TranslationScalarFieldEnum)[keyof typeof TranslationScalarFieldEnum]
+export type TranslationWordScalarFieldEnum = (typeof TranslationWordScalarFieldEnum)[keyof typeof TranslationWordScalarFieldEnum]
+
+
+export const TranslationListsScalarFieldEnum = {
+  id: 'id',
+  language: 'language',
+  note: 'note',
+  listId: 'listId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TranslationListsScalarFieldEnum = (typeof TranslationListsScalarFieldEnum)[keyof typeof TranslationListsScalarFieldEnum]
 
 
 export const SortOrder = {
