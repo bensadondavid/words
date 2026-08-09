@@ -24,7 +24,10 @@ export default function Login() {
     const handleGoogle = async () => {
         try {
             setIsGoogleLoading(true)
-            await authClient.signIn.social({ provider: "google", callbackURL: "/account" })
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/account/home",
+            })
         } catch {
             toast.error('Erreur avec Google')
         } finally {
@@ -38,7 +41,7 @@ export default function Login() {
             const result = await authClient.signIn.passkey()
             if (result?.error) return toast.error(result.error.message)
             toast.success('Connecté !')
-            router.push('/account')
+            router.replace('/account/home')
         } catch {
             toast.error('Erreur avec le passkey')
         } finally {
@@ -53,7 +56,7 @@ export default function Login() {
             const result = await authClient.signIn.email({ email, password })
             if (result.error) return toast.error(result.error.message)
             toast.success('Connecté !')
-            setTimeout(() => router.push('/account'), 800)
+            setTimeout(() => router.replace('/account/home'), 800)
         } catch {
             toast.error('Une erreur est survenue')
         } finally {
@@ -67,7 +70,7 @@ export default function Login() {
             {/* Left panel */}
             <div className="hidden lg:flex lg:w-[55%] bg-[#0d1117] flex-col justify-between p-14 select-none">
                 <div className="absolute top-[-15%] left-[10%] w-100 h-100 rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none" />
-                <div className="absolute bottom-[10%] left-[25%] w-75 h-75 rounded-full bg-violet-600/15 blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-[10%] left-[25%] w-75 h-75 rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
 
                 {/* Logo */}
                 <div className="relative flex items-center gap-2.5">

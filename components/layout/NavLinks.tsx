@@ -11,10 +11,11 @@ import {
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const { setOpen, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <SidebarMenuItem className="py-1">
-      <SidebarMenuButton asChild isActive={pathname === href}>
+      <SidebarMenuButton asChild isActive={isActive}>
         <Link
           href={href}
           onClick={() => {

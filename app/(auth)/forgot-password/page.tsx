@@ -38,7 +38,7 @@ export default function ForgotPassword() {
             {/* Left panel */}
             <div className="hidden lg:flex lg:w-[55%] bg-[#0d1117] flex-col justify-between p-14 select-none">
                 <div className="absolute top-[-15%] left-[10%] w-100 h-100 rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none" />
-                <div className="absolute bottom-[10%] left-[25%] w-75 h-75 rounded-full bg-violet-600/15 blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-[10%] left-[25%] w-75 h-75 rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
 
                 <div className="relative flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">

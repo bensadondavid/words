@@ -1,4 +1,4 @@
-import Footer from "@/components/layout/Footer";
+
 import { auth } from '@/lib/auth/auth'
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -20,12 +20,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <SidebarProvider>
         <AppSidebar />
-          <main>
+          <main className="min-w-0 flex-1">
             <SidebarTrigger />
             {children}
           </main>
       </SidebarProvider>
-      <Footer />
     </>
   );
 }
