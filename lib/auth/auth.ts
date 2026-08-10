@@ -4,6 +4,28 @@ import { prisma } from "../database/prisma";
 import { passkey } from "@better-auth/passkey"
 import { resend } from "../mail/resend";
 
+const HTML_CHARACTERS = /[&<>'"]/g
+const HTML_ENTITIES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  "'": '&#39;',
+  '"': '&quot;',
+}
+
+function escapeHtml(value: string) {
+  return value.replace(HTML_CHARACTERS, (character) => HTML_ENTITIES[character])
+}
+
+function getEmailSender() {
+  const sender = process.env.RESEND_MAIL
+
+  if (sender) return sender
+  if (process.env.NODE_ENV !== 'production') return 'onboarding@resend.dev'
+
+  throw new Error('RESEND_MAIL doit être configuré en production.')
+}
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL!,
   secret: process.env.BETTER_AUTH_SECRET!,
@@ -22,17 +44,23 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     minPasswordLength: 8,
     maxPasswordLength: 120,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async({user, url})=>{
-      await resend.emails.send({
-        from: process.env.RESEND_MAIL || "onboarding@resend.dev",
+      const safeName = escapeHtml(user.name ?? '')
+      const safeUrl = escapeHtml(url)
+      const { error } = await resend.emails.send({
+        from: getEmailSender(),
         to: user.email,
         subject: 'Réinitialisation de mot de passe', 
         html: `
-        <p>Salut ${user.name ?? ""}, </p>
+        <p>Salut ${safeName}, </p>
         <p>Clique ici pour réinitialiser ton mot de passe : </p>
-        <a href="${url}">Réinitialiser mon mot de passe </a> 
-        `
+        <a href="${safeUrl}">Réinitialiser mon mot de passe </a>
+        `,
+        text: `Salut ${user.name ?? ''},\n\nRéinitialise ton mot de passe : ${url}`,
       })
+
+      if (error) throw new Error(`Échec de l’envoi de l’email : ${error.message}`)
     }
   },
 
@@ -40,15 +68,20 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true, 
     sendVerificationEmail: async({user, url})=>{
-      await resend.emails.send({
-       from: process.env.RESEND_MAIL || "onboarding@resend.dev",
+      const safeName = escapeHtml(user.name ?? '')
+      const safeUrl = escapeHtml(url)
+      const { error } = await resend.emails.send({
+        from: getEmailSender(),
         to: user.email,
         subject: "Vérifie ton email",
         html: `
-          <p>Salut ${user.name ?? ""},</p>
+          <p>Salut ${safeName},</p>
           <p>Clique ici pour vérifier ton email :</p>
-          <a href="${url}">Vérifier mon email</a>`,
-        })
+          <a href="${safeUrl}">Vérifier mon email</a>`,
+        text: `Salut ${user.name ?? ''},\n\nVérifie ton email : ${url}`,
+      })
+
+      if (error) throw new Error(`Échec de l’envoi de l’email : ${error.message}`)
       }
   },
 
@@ -79,4 +112,3 @@ export const auth = betterAuth({
     passkey(),
   ],
 });
-

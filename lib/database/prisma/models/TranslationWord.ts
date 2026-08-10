@@ -214,6 +214,7 @@ export type TranslationWordOrderByWithRelationInput = {
 
 export type TranslationWordWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  wordId_language?: Prisma.TranslationWordWordIdLanguageCompoundUniqueInput
   AND?: Prisma.TranslationWordWhereInput | Prisma.TranslationWordWhereInput[]
   OR?: Prisma.TranslationWordWhereInput[]
   NOT?: Prisma.TranslationWordWhereInput | Prisma.TranslationWordWhereInput[]
@@ -224,7 +225,7 @@ export type TranslationWordWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"TranslationWord"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"TranslationWord"> | Date | string
   word?: Prisma.XOR<Prisma.WordScalarRelationFilter, Prisma.WordWhereInput>
-}, "id">
+}, "id" | "wordId_language">
 
 export type TranslationWordOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -329,6 +330,11 @@ export type TranslationWordListRelationFilter = {
 
 export type TranslationWordOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TranslationWordWordIdLanguageCompoundUniqueInput = {
+  wordId: string
+  language: string
 }
 
 export type TranslationWordCountOrderByAggregateInput = {

@@ -105,6 +105,8 @@ model List {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
 }
 
 model Word {
@@ -113,12 +115,14 @@ model Word {
   language String
   note     String?
   listId   String?
-  list     List?    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  list     List?   @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   translationsWords TranslationWord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([listId, createdAt, id])
 }
 
 model TranslationWord {
@@ -128,10 +132,13 @@ model TranslationWord {
   note     String?
   wordId   String
 
-  word Word @relation(fields: [wordId], references: [id])
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([wordId, language])
+  @@index([wordId, createdAt])
 }
 
 model TranslationLists {
@@ -140,8 +147,11 @@ model TranslationLists {
   note     String?
   listId   String
 
-  list List @relation(fields: [listId], references: [id])
+  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([listId, language])
+  @@index([listId, createdAt])
 }

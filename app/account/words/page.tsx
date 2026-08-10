@@ -1,12 +1,16 @@
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import WordsPage from '@/components/pages/WordsPage'
-import { auth } from '@/lib/auth/auth'
+import { getCurrentSession } from '@/lib/auth/get-current-session'
+import { withQueryProfile } from '@/lib/database/query-profiler'
 import { getUserWordsPage } from '@/lib/words/get-user-words-page'
 
 export default async function Page() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  return withQueryProfile('page:/account/words', renderPage)
+}
+
+async function renderPage() {
+  const session = await getCurrentSession()
 
   if (!session) redirect('/login')
 

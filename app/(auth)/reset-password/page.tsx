@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth/auth-client";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner'
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,6 +12,23 @@ import Link from "next/link";
 const inputClass = "h-11 bg-white border border-zinc-200 rounded-lg text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:border-zinc-900 transition-colors text-[15px]"
 
 export default function ResetPassword() {
+    return (
+        <Suspense fallback={<ResetPasswordFallback />}>
+            <ResetPasswordContent />
+        </Suspense>
+    )
+}
+
+function ResetPasswordFallback() {
+    return (
+        <div className="flex min-h-screen" aria-label="Chargement">
+            <div className="hidden bg-[#0d1117] lg:block lg:w-[55%]" />
+            <div className="flex-1 bg-zinc-50" />
+        </div>
+    )
+}
+
+function ResetPasswordContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const token = searchParams.get('token') ?? ''

@@ -205,6 +205,7 @@ export type TranslationListsOrderByWithRelationInput = {
 
 export type TranslationListsWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  listId_language?: Prisma.TranslationListsListIdLanguageCompoundUniqueInput
   AND?: Prisma.TranslationListsWhereInput | Prisma.TranslationListsWhereInput[]
   OR?: Prisma.TranslationListsWhereInput[]
   NOT?: Prisma.TranslationListsWhereInput | Prisma.TranslationListsWhereInput[]
@@ -214,7 +215,7 @@ export type TranslationListsWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"TranslationLists"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"TranslationLists"> | Date | string
   list?: Prisma.XOR<Prisma.ListScalarRelationFilter, Prisma.ListWhereInput>
-}, "id">
+}, "id" | "listId_language">
 
 export type TranslationListsOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -310,6 +311,11 @@ export type TranslationListsListRelationFilter = {
 
 export type TranslationListsOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TranslationListsListIdLanguageCompoundUniqueInput = {
+  listId: string
+  language: string
 }
 
 export type TranslationListsCountOrderByAggregateInput = {

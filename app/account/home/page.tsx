@@ -3,16 +3,17 @@ import {
   ArrowRight,
   BookOpen,
   Clock3,
+  Gamepad2,
   Languages,
   Layers3,
   ListPlus,
 } from 'lucide-react'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
-import { auth } from '@/lib/auth/auth'
+import { getCurrentSession } from '@/lib/auth/get-current-session'
 import { prisma } from '@/lib/database/prisma'
+import { withQueryProfile } from '@/lib/database/query-profiler'
 
 const DAY_COUNT = 30
 const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -33,15 +34,21 @@ type ActivityPoint = {
   count: number
 }
 
+type ActivityDatabaseRow = {
+  key: string
+  count: number
+}
+
 export default async function HomePage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  return withQueryProfile('page:/account/home', renderHomePage)
+}
+
+async function renderHomePage() {
+  const session = await getCurrentSession()
 
   if (!session) redirect('/login')
 
   const today = new Date()
-  const activityStart = new Date(today)
-  activityStart.setHours(0, 0, 0, 0)
-  activityStart.setDate(activityStart.getDate() - (DAY_COUNT - 1))
 
   const [lists, recentWords, activityRows] = await Promise.all([
     prisma.list.findMany({
@@ -71,13 +78,24 @@ export default async function HomePage() {
         },
       },
     }),
-    prisma.word.findMany({
-      where: {
-        list: { userId: session.user.id },
-        createdAt: { gte: activityStart },
-      },
-      select: { createdAt: true },
-    }),
+    prisma.$queryRaw<ActivityDatabaseRow[]>`
+      SELECT
+        TO_CHAR(
+          (word."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jerusalem',
+          'YYYY-MM-DD'
+        ) AS "key",
+        COUNT(*)::integer AS "count"
+      FROM "Word" AS word
+      INNER JOIN "List" AS list ON list."id" = word."listId"
+      WHERE list."userId" = ${session.user.id}
+        AND (
+          (word."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Jerusalem'
+        ) >= (
+          CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jerusalem'
+        )::date - (${DAY_COUNT - 1} * INTERVAL '1 day')
+      GROUP BY 1
+      ORDER BY 1
+    `,
   ])
 
   const totalWords = lists.reduce((total, list) => total + list._count.words, 0)
@@ -87,19 +105,24 @@ export default async function HomePage() {
       ...list.translationLists.map(({ language }) => language),
     ])
   ).size
-  const activityCounts = new Map<string, number>()
+  const activityCounts = new Map(
+    activityRows.map(({ key, count }) => [key, count])
+  )
 
-  for (const word of activityRows) {
-    const key = dateKeyFormatter.format(word.createdAt)
-    activityCounts.set(key, (activityCounts.get(key) ?? 0) + 1)
-  }
+  const [todayYear, todayMonth, todayDay] = dateKeyFormatter
+    .format(today)
+    .split('-')
+    .map(Number)
+  const activityStart = new Date(
+    Date.UTC(todayYear, todayMonth - 1, todayDay - (DAY_COUNT - 1), 12)
+  )
 
   const activity: ActivityPoint[] = Array.from(
     { length: DAY_COUNT },
     (_, index) => {
       const date = new Date(activityStart)
-      date.setDate(activityStart.getDate() + index)
-      const key = dateKeyFormatter.format(date)
+      date.setUTCDate(activityStart.getUTCDate() + index)
+      const key = date.toISOString().slice(0, 10)
       return {
         key,
         label: shortDateFormatter.format(date),
@@ -278,17 +301,23 @@ export default async function HomePage() {
           <div>
             <h2 className="font-semibold">Actions rapides</h2>
             <p className="text-sm text-muted-foreground">
-              Gérez vos listes ou parcourez tout votre vocabulaire.
+              Lancez une partie ou gérez votre vocabulaire.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/account/game">
+                <Gamepad2 className="size-4" />
+                Jouer
+              </Link>
+            </Button>
             <Button asChild variant="outline">
               <Link href="/account/lists">
                 <ListPlus className="size-4" />
                 Gérer mes listes
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild variant="outline">
               <Link href="/account/words">
                 <BookOpen className="size-4" />
                 Tous mes mots

@@ -32,6 +32,16 @@ type FormList = {
   translations: string[]
 }
 
+type ListMutationResponse = {
+  list?: {
+    id: string
+    name: string
+    language: string
+    translationLists: Array<{ language: string }>
+  }
+  error?: string
+}
+
 const createEmptyForm = (): FormList => ({
   name: '',
   language: '',
@@ -172,9 +182,11 @@ export default function ListsPage({ initialLists }: ListsPageProps) {
         }
       )
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => null)
+      const data = (await response.json().catch(() => null)) as
+        | ListMutationResponse
+        | null
 
+      if (!response.ok) {
         throw new Error(
           data?.error ??
             (isEditing
@@ -183,12 +195,40 @@ export default function ListsPage({ initialLists }: ListsPageProps) {
         )
       }
 
+      if (!data?.list) {
+        throw new Error('La réponse du serveur est invalide')
+      }
+
+      const savedList = {
+        id: data.list.id,
+        name: data.list.name,
+        language: data.list.language,
+        translations: data.list.translationLists.map(
+          (translation) => translation.language
+        ),
+      }
+
+      setLists((currentLists) => {
+        const previousList = currentLists.find(
+          (currentList) => currentList.id === savedList.id
+        )
+
+        return [
+          {
+            ...savedList,
+            wordCount: previousList?.wordCount ?? 0,
+          },
+          ...currentLists.filter(
+            (currentList) => currentList.id !== savedList.id
+          ),
+        ]
+      })
+
       toast.success(
         isEditing ? 'Liste modifiée' : 'Liste créée'
       )
 
       closeDialog()
-      await getLists()
     } catch (error) {
       console.error(error)
 

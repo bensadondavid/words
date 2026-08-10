@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation'
 
-import ListsPage from '@/components/pages/ListsPage'
-import type { ListSummary } from '@/components/pages/ListsPage'
+import GamePage, { type GameList } from '@/components/pages/GamePage'
 import { getCurrentSession } from '@/lib/auth/get-current-session'
 import { prisma } from '@/lib/database/prisma'
 import { withQueryProfile } from '@/lib/database/query-profiler'
 
 export default async function Page() {
-  return withQueryProfile('page:/account/lists', renderPage)
+  return withQueryProfile('page:/account/game', renderPage)
 }
 
 async function renderPage() {
@@ -15,10 +14,13 @@ async function renderPage() {
 
   if (!session) redirect('/login')
 
-  const lists = await prisma.list.findMany({
+  const userLists = await prisma.list.findMany({
     where: { userId: session.user.id },
     orderBy: { updatedAt: 'desc' },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      language: true,
       translationLists: {
         orderBy: { createdAt: 'asc' },
         select: { language: true },
@@ -27,13 +29,13 @@ async function renderPage() {
     },
   })
 
-  const initialLists: ListSummary[] = lists.map((list) => ({
+  const lists: GameList[] = userLists.map((list) => ({
     id: list.id,
     name: list.name,
     language: list.language,
-    translations: list.translationLists.map(({ language }) => language),
+    translationLanguages: list.translationLists.map(({ language }) => language),
     wordCount: list._count.words,
   }))
 
-  return <ListsPage initialLists={initialLists} />
+  return <GamePage lists={lists} />
 }

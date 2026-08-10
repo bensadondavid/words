@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { auth } from '@/lib/auth/auth'
+import { isPrismaUniqueConstraintError } from '@/lib/database/is-prisma-unique-constraint-error'
 import { prisma } from '@/lib/database/prisma'
+import { withQueryProfile } from '@/lib/database/query-profiler'
+import { getOwnedListWordsPage } from '@/lib/words/get-owned-list-words-page'
 
 const translationSchema = z.object({
   language: z.string().trim().min(1).max(50),
@@ -62,7 +65,60 @@ function serializeWord(word: {
   }
 }
 
+export async function GET(request: Request, { params }: WordsRouteContext) {
+  return withQueryProfile('api:GET /api/lists/[listId]/words', () =>
+    getWords(request, params)
+  )
+}
+
+async function getWords(
+  request: Request,
+  params: WordsRouteContext['params']
+) {
+  const [{ listId }, session] = await Promise.all([
+    params,
+    auth.api.getSession({ headers: request.headers }),
+  ])
+
+  if (!session) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
+
+  try {
+    const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined
+    const page = await getOwnedListWordsPage(listId, session.user.id, cursor)
+
+    if (!page) {
+      return NextResponse.json({ error: 'Liste introuvable.' }, { status: 404 })
+    }
+
+    return NextResponse.json(
+      {
+        words: page.words,
+        nextCursor: page.nextCursor,
+        wordCount: page.list.wordCount,
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } }
+    )
+  } catch (error) {
+    console.error('Unable to load list words', error)
+    return NextResponse.json(
+      { error: 'Impossible de charger les mots suivants.' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: Request, { params }: WordsRouteContext) {
+  return withQueryProfile('api:POST /api/lists/[listId]/words', () =>
+    createWord(request, params)
+  )
+}
+
+async function createWord(
+  request: Request,
+  params: WordsRouteContext['params']
+) {
   const [{ listId }, session] = await Promise.all([
     params,
     auth.api.getSession({ headers: request.headers }),
@@ -105,12 +161,28 @@ export async function POST(request: Request, { params }: WordsRouteContext) {
 
     return NextResponse.json({ word: serializeWord(word) }, { status: 201 })
   } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      return NextResponse.json(
+        { error: 'Une seule traduction par langue est autorisée.' },
+        { status: 409 }
+      )
+    }
+
     console.error('Unable to create word', error)
     return NextResponse.json({ error: 'Impossible de créer le mot.' }, { status: 500 })
   }
 }
 
 export async function PATCH(request: Request, { params }: WordsRouteContext) {
+  return withQueryProfile('api:PATCH /api/lists/[listId]/words', () =>
+    updateWord(request, params)
+  )
+}
+
+async function updateWord(
+  request: Request,
+  params: WordsRouteContext['params']
+) {
   const [{ listId }, session] = await Promise.all([
     params,
     auth.api.getSession({ headers: request.headers }),
@@ -166,12 +238,28 @@ export async function PATCH(request: Request, { params }: WordsRouteContext) {
 
     return NextResponse.json({ word: serializeWord(word) })
   } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      return NextResponse.json(
+        { error: 'Une seule traduction par langue est autorisée.' },
+        { status: 409 }
+      )
+    }
+
     console.error('Unable to update word', error)
     return NextResponse.json({ error: 'Impossible de modifier le mot.' }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request, { params }: WordsRouteContext) {
+  return withQueryProfile('api:DELETE /api/lists/[listId]/words', () =>
+    deleteWord(request, params)
+  )
+}
+
+async function deleteWord(
+  request: Request,
+  params: WordsRouteContext['params']
+) {
   const [{ listId }, session] = await Promise.all([
     params,
     auth.api.getSession({ headers: request.headers }),
@@ -187,22 +275,16 @@ export async function DELETE(request: Request, { params }: WordsRouteContext) {
       return NextResponse.json({ error: 'Identifiant invalide.' }, { status: 400 })
     }
 
-    const word = await prisma.word.findFirst({
+    const deletedWord = await prisma.word.deleteMany({
       where: {
         id: parsed.data.wordId,
         listId,
         list: { userId: session.user.id },
       },
-      select: { id: true },
     })
-    if (!word) {
+    if (deletedWord.count === 0) {
       return NextResponse.json({ error: 'Mot introuvable.' }, { status: 404 })
     }
-
-    await prisma.$transaction(async (transaction) => {
-      await transaction.translationWord.deleteMany({ where: { wordId: word.id } })
-      await transaction.word.delete({ where: { id: word.id } })
-    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

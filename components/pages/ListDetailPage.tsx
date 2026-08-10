@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  FileSpreadsheet,
+  LoaderCircle,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -23,6 +30,7 @@ export type ListDetail = {
   name: string
   language: string
   translationLanguages: string[]
+  wordCount: number
 }
 
 type WordTranslation = {
@@ -46,9 +54,22 @@ type WordForm = {
 type ListDetailPageProps = {
   list: ListDetail
   initialWords: WordSummary[]
+  initialNextCursor: string | null
 }
 
-export default function ListDetailPage({ list, initialWords }: ListDetailPageProps) {
+type ListWordsPageData = {
+  words: WordSummary[]
+  nextCursor: string | null
+  wordCount: number
+}
+
+export default function ListDetailPage({
+  list,
+  initialWords,
+  initialNextCursor,
+}: ListDetailPageProps) {
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const loadingMoreRef = useRef(false)
   const createEmptyForm = (): WordForm => ({
     text: '',
     translations: list.translationLanguages.map((language) => ({
@@ -58,12 +79,77 @@ export default function ListDetailPage({ list, initialWords }: ListDetailPagePro
   })
 
   const [words, setWords] = useState(initialWords)
+  const [wordCount, setWordCount] = useState(list.wordCount)
+  const [nextCursor, setNextCursor] = useState(initialNextCursor)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [form, setForm] = useState<WordForm>(createEmptyForm)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [wordToDelete, setWordToDelete] = useState<WordSummary | null>(null)
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMoreRef.current) return
+
+    loadingMoreRef.current = true
+    setLoadingMore(true)
+    setLoadError('')
+
+    try {
+      const response = await fetch(
+        `/api/lists/${list.id}/words?cursor=${encodeURIComponent(nextCursor)}`,
+        { cache: 'no-store' }
+      )
+      const data = (await response.json().catch(() => null)) as
+        | ListWordsPageData
+        | { error?: string }
+        | null
+
+      if (!response.ok || !data || !('words' in data)) {
+        throw new Error(
+          data && 'error' in data && data.error
+            ? data.error
+            : 'Impossible de charger les mots suivants.'
+        )
+      }
+
+      setWords((currentWords) => {
+        const knownIds = new Set(currentWords.map(({ id }) => id))
+        return [
+          ...currentWords,
+          ...data.words.filter(({ id }) => !knownIds.has(id)),
+        ]
+      })
+      setWordCount(data.wordCount)
+      setNextCursor(data.nextCursor)
+    } catch (error) {
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : 'Impossible de charger les mots suivants.'
+      )
+    } finally {
+      loadingMoreRef.current = false
+      setLoadingMore(false)
+    }
+  }, [list.id, nextCursor])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !nextCursor) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMore()
+      },
+      { rootMargin: '300px 0px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, nextCursor])
 
   const closeDialog = () => {
     setDialogOpen(false)
@@ -130,6 +216,7 @@ export default function ListDetailPage({ list, initialWords }: ListDetailPagePro
             )
           : [savedWord, ...currentWords]
       )
+      if (!editingId) setWordCount((currentCount) => currentCount + 1)
       toast.success(editingId ? 'Mot modifié' : 'Mot ajouté')
       closeDialog()
     } catch (error) {
@@ -157,11 +244,14 @@ export default function ListDetailPage({ list, initialWords }: ListDetailPagePro
         throw new Error(data?.error ?? 'Impossible de supprimer le mot.')
       }
 
-      setWords((currentWords) =>
-        currentWords.filter(
-          (currentWord) => currentWord.id !== wordToDelete.id
-        )
+      const remainingWords = words.filter(
+        (currentWord) => currentWord.id !== wordToDelete.id
       )
+      setWords(remainingWords)
+      setWordCount((currentCount) => Math.max(0, currentCount - 1))
+      if (nextCursor === wordToDelete.id) {
+        setNextCursor(remainingWords.at(-1)?.id ?? null)
+      }
       setWordToDelete(null)
       toast.success('Mot supprimé')
     } catch (error) {
@@ -201,16 +291,24 @@ export default function ListDetailPage({ list, initialWords }: ListDetailPagePro
             </div>
           </div>
 
-          <Button onClick={openCreateDialog} className="self-start sm:self-auto">
-            <Plus className="size-4" />
-            Ajouter un mot
-          </Button>
+          <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+            <Button asChild variant="outline">
+              <Link href={`/account/import?listId=${list.id}`}>
+                <FileSpreadsheet className="size-4" />
+                Importer un CSV
+              </Link>
+            </Button>
+            <Button onClick={openCreateDialog}>
+              <Plus className="size-4" />
+              Ajouter un mot
+            </Button>
+          </div>
         </header>
 
         <div className="mb-4 mt-8 flex items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">Mots</h2>
           <span className="text-sm text-muted-foreground">
-            {words.length} {words.length > 1 ? 'mots' : 'mot'}
+            {wordCount} {wordCount > 1 ? 'mots' : 'mot'}
           </span>
         </div>
 
@@ -348,6 +446,32 @@ export default function ListDetailPage({ list, initialWords }: ListDetailPagePro
             </div>
           </>
         )}
+
+        <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+        <div className="flex min-h-20 items-center justify-center py-5 text-sm text-muted-foreground">
+          {loadingMore ? (
+            <span className="flex items-center gap-2">
+              <LoaderCircle className="size-4 animate-spin" />
+              Chargement de 50 mots…
+            </span>
+          ) : loadError ? (
+            <div className="text-center">
+              <p className="text-destructive">{loadError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={loadMore}
+                className="mt-3"
+              >
+                Réessayer
+              </Button>
+            </div>
+          ) : nextCursor ? (
+            <span>Faites défiler pour charger la suite</span>
+          ) : words.length > 0 ? (
+            <span>Tous les mots sont affichés</span>
+          ) : null}
+        </div>
       </div>
 
       <Dialog

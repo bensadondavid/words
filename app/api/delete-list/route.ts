@@ -1,11 +1,18 @@
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/database/prisma'
+import { withQueryProfile } from '@/lib/database/query-profiler'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const deleteListSchema = z.object({ id: z.string().min(1) })
 
 export async function DELETE(request: Request) {
+  return withQueryProfile('api:DELETE /api/delete-list', () =>
+    deleteList(request)
+  )
+}
+
+async function deleteList(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers })
 
   if (!session) {
@@ -19,23 +26,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Identifiant invalide.' }, { status: 400 })
     }
 
-    const list = await prisma.list.findFirst({
+    const deletedList = await prisma.list.deleteMany({
       where: { id: parsed.data.id, userId: session.user.id },
-      select: { id: true },
     })
 
-    if (!list) {
+    if (deletedList.count === 0) {
       return NextResponse.json({ error: 'Liste introuvable.' }, { status: 404 })
     }
-
-    await prisma.$transaction(async (transaction) => {
-      await transaction.translationWord.deleteMany({
-        where: { word: { listId: list.id } },
-      })
-      await transaction.word.deleteMany({ where: { listId: list.id } })
-      await transaction.translationLists.deleteMany({ where: { listId: list.id } })
-      await transaction.list.delete({ where: { id: list.id } })
-    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

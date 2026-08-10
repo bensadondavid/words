@@ -1,8 +1,9 @@
+import { getSessionCookie } from 'better-auth/cookies'
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(req: NextRequest) {
-  const sessionCookie = req.cookies.get("words.session_token") || req.cookies.get("__Secure-dashboard.session_token");
+  const sessionCookie = getSessionCookie(req, { cookiePrefix: 'words' })
 
   if (!sessionCookie) {
     return NextResponse.redirect(new URL("/login", req.url));

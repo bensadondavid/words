@@ -1,8 +1,13 @@
 import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/database/prisma'
+import { withQueryProfile } from '@/lib/database/query-profiler'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
+  return withQueryProfile('api:GET /api/get-lists', () => getLists(request))
+}
+
+async function getLists(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers })
 
   if (!session) {

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth/auth'
+import { withQueryProfile } from '@/lib/database/query-profiler'
 import { getUserWordsPage } from '@/lib/words/get-user-words-page'
 
 export async function GET(request: Request) {
+  return withQueryProfile('api:GET /api/words', () => getWords(request))
+}
+
+async function getWords(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers })
 
   if (!session) {
