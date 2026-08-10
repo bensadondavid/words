@@ -80,6 +80,23 @@ function getWordCacheKey(listId: string, language: string) {
   return `${listId}:${language}`
 }
 
+function isGameWord(value: unknown): value is GameWord {
+  if (!value || typeof value !== 'object') return false
+
+  const word = value as Partial<GameWord>
+  return (
+    typeof word.id === 'string' &&
+    typeof word.text === 'string' &&
+    Array.isArray(word.translations) &&
+    word.translations.every(
+      (translation) =>
+        Boolean(translation) &&
+        typeof translation.text === 'string' &&
+        typeof translation.language === 'string'
+    )
+  )
+}
+
 export default function GamePage({ lists }: { lists: GameList[] }) {
   const firstList =
     lists.find(
@@ -227,8 +244,12 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
           )
         }
 
+        if (!Array.isArray(data.words) || !data.words.every(isGameWord)) {
+          throw new Error('Les données reçues pour la partie sont invalides.')
+        }
+
         words = data.words
-        setWordCache((current) => ({ ...current, [cacheKey]: data.words }))
+        setWordCache((current) => ({ ...current, [cacheKey]: words }))
       }
 
       if (!words.length) {

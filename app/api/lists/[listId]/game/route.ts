@@ -63,8 +63,13 @@ async function getGameWords(
       )
     }
 
+    const words = list.words.map(({ translationsWords, ...word }) => ({
+      ...word,
+      translations: translationsWords,
+    }))
+
     return NextResponse.json(
-      { words: list.words },
+      { words },
       { headers: { 'Cache-Control': 'private, no-store' } }
     )
   } catch (error) {

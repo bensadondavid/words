@@ -407,11 +407,10 @@ function ActivityChart({ points }: { points: ActivityPoint[] }) {
           const x = left + index * slotWidth + (slotWidth - barWidth) / 2
           const y = top + plotHeight - barHeight
           const showLabel = index % 5 === 0 || index === points.length - 1
+          const tooltip = `${point.label} : ${point.count} ${point.count > 1 ? 'mots' : 'mot'}`
           return (
             <g key={point.key}>
-              <title>
-                {point.label} : {point.count} {point.count > 1 ? 'mots' : 'mot'}
-              </title>
+              <title>{tooltip}</title>
               <rect
                 x={x}
                 y={y}
