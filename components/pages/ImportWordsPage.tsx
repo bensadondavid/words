@@ -30,7 +30,8 @@ export type ImportList = {
 type ValidatedRow = {
   line: number
   text: string
-  translations: Array<{ language: string; text: string }>
+  note?: string
+  translations: Array<{ language: string; text: string; note?: string }>
   errors: string[]
 }
 
@@ -46,6 +47,7 @@ type ImportResult = {
 
 const MAX_ROWS = 500
 const MAX_FILE_SIZE = 2 * 1024 * 1024
+const MAX_NOTE_LENGTH = 5_000
 
 function normalizeHeader(value: string) {
   return value.replace(/^\uFEFF/, '').trim().toLocaleLowerCase()
@@ -115,6 +117,18 @@ function validateCsv(rawRows: string[][], list?: ImportList): ValidationResult {
   const headers = rawRows[0].map(normalizeHeader)
   const sourceHeaders = new Set(['mot', 'word', normalizeHeader(list.language)])
   const sourceIndex = headers.findIndex((header) => sourceHeaders.has(header))
+  const sourceNoteHeaders = new Set([
+    'note',
+    'note mot',
+    'note du mot',
+    'word note',
+    'note word',
+    `note ${normalizeHeader(list.language)}`,
+    `${normalizeHeader(list.language)} note`,
+  ])
+  const sourceNoteIndex = headers.findIndex((header) =>
+    sourceNoteHeaders.has(header)
+  )
   const translationIndexes = list.translationLanguages.map((language) => {
     const languageHeader = normalizeHeader(language)
     let index = headers.indexOf(languageHeader)
@@ -123,7 +137,17 @@ function validateCsv(rawRows: string[][], list?: ImportList): ValidationResult {
         ['traduction', 'translation'].includes(header)
       )
     }
-    return { language, index }
+    const noteHeaders = new Set([
+      `note ${languageHeader}`,
+      `${languageHeader} note`,
+    ])
+    if (list.translationLanguages.length === 1) {
+      noteHeaders.add('note traduction')
+      noteHeaders.add('translation note')
+    }
+    const noteIndex = headers.findIndex((header) => noteHeaders.has(header))
+
+    return { language, index, noteIndex }
   })
   const errors: string[] = []
 
@@ -145,22 +169,35 @@ function validateCsv(rawRows: string[][], list?: ImportList): ValidationResult {
 
   const rows = dataRows.slice(0, MAX_ROWS).map((row, index) => {
     const text = (row[sourceIndex] ?? '').trim()
-    const translations = translationIndexes.map(({ language, index: column }) => ({
-      language,
-      text: (row[column] ?? '').trim(),
-    }))
+    const note = sourceNoteIndex >= 0
+      ? (row[sourceNoteIndex] ?? '').trim() || undefined
+      : undefined
+    const translations = translationIndexes.map(
+      ({ language, index: column, noteIndex }) => ({
+        language,
+        text: (row[column] ?? '').trim(),
+        note:
+          noteIndex >= 0
+            ? (row[noteIndex] ?? '').trim() || undefined
+            : undefined,
+      })
+    )
     const rowErrors: string[] = []
 
     if (!text) rowErrors.push('Mot manquant')
     if (text.length > 200) rowErrors.push('Mot trop long')
+    if (note && note.length > MAX_NOTE_LENGTH) rowErrors.push('Note du mot trop longue')
     translations.forEach((translation) => {
       if (!translation.text) rowErrors.push(`${translation.language} manquant`)
       if (translation.text.length > 200) {
         rowErrors.push(`${translation.language} trop long`)
       }
+      if (translation.note && translation.note.length > MAX_NOTE_LENGTH) {
+        rowErrors.push(`Note ${translation.language} trop longue`)
+      }
     })
 
-    return { line: index + 2, text, translations, errors: rowErrors }
+    return { line: index + 2, text, note, translations, errors: rowErrors }
   })
 
   return { errors, rows }
@@ -173,7 +210,14 @@ function escapeCsv(value: string) {
 function createAiPrompt(list?: ImportList) {
   if (!list?.translationLanguages.length) return ''
 
-  const header = ['mot', ...list.translationLanguages].join(';')
+  const header = [
+    'mot',
+    'note mot',
+    ...list.translationLanguages.flatMap((language) => [
+      language,
+      `note ${language}`,
+    ]),
+  ].join(';')
   const translationLanguages = list.translationLanguages.join(', ')
 
   return `Crée un fichier CSV UTF-8 contenant [NOMBRE DE MOTS] mots pour la liste « ${list.name} ».
@@ -184,7 +228,9 @@ Langues de traduction : ${translationLanguages}.
 Respecte exactement ces règles :
 - utilise le point-virgule comme séparateur ;
 - la première ligne doit être exactement : ${header}
-- ajoute ensuite une ligne par mot, avec une valeur dans chaque colonne ;
+- ajoute ensuite une ligne par mot ; les colonnes de notes sont facultatives et peuvent rester vides ;
+- lorsqu’une note est renseignée, écris un indice ou un contexte court dans la même langue que le terme qu’elle accompagne, sans révéler sa traduction ;
+- « note mot » accompagne le mot en ${list.language} et « note [langue] » accompagne la traduction de cette langue lorsqu’elle est affichée dans le jeu ;
 - conserve le même ordre de colonnes sur toutes les lignes ;
 - évite les doublons ;
 - entoure de guillemets les valeurs contenant un point-virgule, un guillemet ou un retour à la ligne, et double les guillemets internes ;
@@ -265,7 +311,14 @@ export default function ImportWordsPage({
 
   function downloadTemplate() {
     if (!selectedList) return
-    const header = ['mot', ...selectedList.translationLanguages]
+    const header = [
+      'mot',
+      'note mot',
+      ...selectedList.translationLanguages.flatMap((language) => [
+        language,
+        `note ${language}`,
+      ]),
+    ]
       .map(escapeCsv)
       .join(';')
     const blob = new Blob([`\uFEFF${header}\r\n`], {
@@ -298,7 +351,11 @@ export default function ImportWordsPage({
       const result = await importWords({
         listId: selectedList.id,
         skipDuplicates,
-        rows: validRows.map(({ text, translations }) => ({ text, translations })),
+        rows: validRows.map(({ text, note, translations }) => ({
+          text,
+          note,
+          translations,
+        })),
       })
 
       if ('error' in result && result.error) throw new Error(result.error)
@@ -450,9 +507,23 @@ export default function ImportWordsPage({
                     {validation.rows.map((row) => (
                       <tr key={row.line} className={row.errors.length ? 'bg-red-50/60' : ''}>
                         <td className="px-5 py-3 text-muted-foreground">{row.line}</td>
-                        <td className="max-w-52 break-words px-5 py-3 font-semibold">{row.text || '—'}</td>
+                        <td className="max-w-52 break-words px-5 py-3">
+                          <span className="font-semibold">{row.text || '—'}</span>
+                          {row.note && (
+                            <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                              Note : {row.note}
+                            </span>
+                          )}
+                        </td>
                         {row.translations.map((translation) => (
-                          <td key={translation.language} className="max-w-52 break-words px-5 py-3">{translation.text || '—'}</td>
+                          <td key={translation.language} className="max-w-52 break-words px-5 py-3">
+                            {translation.text || '—'}
+                            {translation.note && (
+                              <span className="mt-1 block text-xs text-muted-foreground">
+                                Note : {translation.note}
+                              </span>
+                            )}
+                          </td>
                         ))}
                         <td className="px-5 py-3">
                           {row.errors.length ? (
@@ -510,12 +581,28 @@ export default function ImportWordsPage({
             La première ligne contient les noms des colonnes. Chaque ligne suivante correspond à un mot.
           </p>
           <div className="mt-4 overflow-x-auto rounded-lg bg-secondary p-3 font-mono text-xs">
-            {['mot', ...(selectedList?.translationLanguages ?? [])].join(';')}
+            {[
+              'mot',
+              'note mot',
+              ...(selectedList?.translationLanguages.flatMap((language) => [
+                language,
+                `note ${language}`,
+              ]) ?? []),
+            ].join(';')}
+          </div>
+          <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Notes dans le jeu</p>
+            <p className="mt-1">
+              <span className="font-medium text-foreground">note mot</span> s’affiche
+              sous le mot source. Chaque <span className="font-medium text-foreground">note [langue]</span> s’affiche
+              sous sa traduction lorsqu’elle devient le terme à traduire.
+            </p>
           </div>
           <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
             <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /> Virgule, point-virgule ou tabulation</li>
             <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /> Fichiers CSV exportés depuis Excel ou Google Sheets</li>
             <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /> Guillemets et accents pris en charge</li>
+            <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /> Notes facultatives, courtes et sans révéler la réponse</li>
           </ul>
           <Button
             variant="outline"

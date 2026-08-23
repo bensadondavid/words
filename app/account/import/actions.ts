@@ -12,6 +12,7 @@ import { withQueryProfile } from '@/lib/database/query-profiler'
 const translationSchema = z.object({
   language: z.string().trim().min(1).max(50),
   text: z.string().trim().min(1).max(200),
+  note: z.string().trim().max(5_000).optional(),
 })
 
 const importSchema = z.object({
@@ -21,6 +22,7 @@ const importSchema = z.object({
     .array(
       z.object({
         text: z.string().trim().min(1).max(200),
+        note: z.string().trim().max(5_000).optional(),
         translations: z.array(translationSchema).min(1).max(10),
       })
     )
@@ -120,6 +122,7 @@ async function runImportWords(input: unknown) {
             id,
             text: row.text,
             language: list.language,
+            note: row.note || null,
             listId: list.id,
           })),
         })
@@ -130,6 +133,7 @@ async function runImportWords(input: unknown) {
               id: randomUUID(),
               wordId,
               text: translation.text,
+              note: translation.note || null,
               language:
                 canonicalLanguages.get(
                   translation.language.trim().toLocaleLowerCase()

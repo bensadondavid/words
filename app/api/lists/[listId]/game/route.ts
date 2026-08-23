@@ -46,10 +46,11 @@ async function getGameWords(
           select: {
             id: true,
             text: true,
+            note: true,
             translationsWords: {
               where: { language },
               orderBy: { createdAt: 'asc' },
-              select: { text: true, language: true },
+              select: { text: true, language: true, note: true },
             },
           },
         },

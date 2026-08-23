@@ -17,8 +17,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-type GameTranslation = { text: string; language: string }
-type GameWord = { id: string; text: string; translations: GameTranslation[] }
+type GameTranslation = { text: string; language: string; note?: string | null }
+type GameWord = {
+  id: string
+  text: string
+  note?: string | null
+  translations: GameTranslation[]
+}
 
 export type GameList = {
   id: string
@@ -35,6 +40,7 @@ type Screen = 'setup' | 'playing' | 'results'
 type Question = {
   id: string
   prompt: string
+  promptNote?: string | null
   promptLanguage: string
   answerLanguage: string
   acceptedAnswers: string[]
@@ -87,12 +93,14 @@ function isGameWord(value: unknown): value is GameWord {
   return (
     typeof word.id === 'string' &&
     typeof word.text === 'string' &&
+    (word.note == null || typeof word.note === 'string') &&
     Array.isArray(word.translations) &&
     word.translations.every(
       (translation) =>
         Boolean(translation) &&
         typeof translation.text === 'string' &&
-        typeof translation.language === 'string'
+        typeof translation.language === 'string' &&
+        (translation.note == null || typeof translation.note === 'string')
     )
   )
 }
@@ -169,10 +177,11 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
     const selectedWords = shuffle(words).slice(0, questionLimit)
 
     return selectedWords.map((word, index) => {
+      const matchingTranslations = word.translations.filter(
+        (translation) => translation.language === targetLanguage
+      )
       const translations = unique(
-        word.translations
-          .filter((translation) => translation.language === targetLanguage)
-          .map((translation) => translation.text)
+        matchingTranslations.map((translation) => translation.text)
       )
       const resolvedDirection =
         direction === 'mixed'
@@ -181,6 +190,11 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
             : 'reverse'
           : direction
       const isForward = resolvedDirection === 'forward'
+      const promptTranslation = isForward
+        ? undefined
+        : matchingTranslations[
+            Math.floor(Math.random() * matchingTranslations.length)
+          ]
       const acceptedAnswers = isForward ? translations : [word.text]
       const possibleAnswers = isForward
         ? currentTargetAnswers
@@ -197,9 +211,8 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
 
       return {
         id: `${word.id}-${resolvedDirection}-${index}`,
-        prompt: isForward
-          ? word.text
-          : translations[Math.floor(Math.random() * translations.length)],
+        prompt: isForward ? word.text : (promptTranslation?.text ?? ''),
+        promptNote: isForward ? word.note : promptTranslation?.note,
         promptLanguage: isForward ? list.language : targetLanguage,
         answerLanguage: isForward ? targetLanguage : list.language,
         acceptedAnswers,
@@ -584,6 +597,12 @@ function GameRound({
             <h1 className="mt-2 break-words text-3xl font-bold sm:text-5xl">
               {question.prompt}
             </h1>
+            {question.promptNote && (
+              <p className="mx-auto mt-2 w-fit max-w-xl break-words rounded-lg bg-secondary px-3 py-1.5 text-sm text-muted-foreground sm:text-base">
+                <span className="font-semibold text-foreground">Note :</span>{' '}
+                {question.promptNote}
+              </p>
+            )}
           </div>
 
           {mode === 'writing' ? (
@@ -726,7 +745,11 @@ function ResultsScreen({
                 key={finalResult.question.id}
                 className="grid gap-3 px-5 py-4 sm:grid-cols-[1fr_1.5fr_auto] sm:items-center sm:px-6"
               >
-                <ResultValue label="Mot" value={finalResult.question.prompt} />
+                <ResultValue
+                  label="Mot"
+                  value={finalResult.question.prompt}
+                  note={finalResult.question.promptNote}
+                />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Réponse attendue</p>
                   <p className="break-words font-medium text-emerald-700">
@@ -852,11 +875,24 @@ function Stat({ label, value, last = false }: { label: string; value: React.Reac
   )
 }
 
-function ResultValue({ label, value }: { label: string; value: string }) {
+function ResultValue({
+  label,
+  value,
+  note,
+}: {
+  label: string
+  value: string
+  note?: string | null
+}) {
   return (
     <div className="min-w-0">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="break-words font-semibold">{value}</p>
+      {note && (
+        <p className="mt-0.5 break-words text-xs text-muted-foreground">
+          Note : {note}
+        </p>
+      )}
     </div>
   )
 }
