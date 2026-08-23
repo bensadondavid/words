@@ -7,13 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CLIENT
+  ADMIN
+}
+
 model User {
   id            String    @id
   name          String
   email         String
   emailVerified Boolean   @default(false)
   image         String?
-  role          String    @default("CLIENT")
+  role          Role      @default(CLIENT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
@@ -148,6 +153,67 @@ model TranslationLists {
   listId   String
 
   list List @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([listId, language])
+  @@index([listId, createdAt])
+}
+
+model OfficialList {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  language    String
+  published   Boolean @default(true)
+
+  words                OfficialWord[]
+  translationLanguages OfficialTranslationList[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, updatedAt])
+}
+
+model OfficialWord {
+  id       String       @id @default(cuid())
+  text     String
+  language String
+  note     String?
+  listId   String
+  list     OfficialList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  translations OfficialTranslationWord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listId, createdAt, id])
+}
+
+model OfficialTranslationWord {
+  id       String       @id @default(cuid())
+  text     String
+  language String
+  note     String?
+  wordId   String
+  word     OfficialWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([wordId, language])
+  @@index([wordId, createdAt])
+}
+
+model OfficialTranslationList {
+  id       String       @id @default(cuid())
+  language String
+  note     String?
+  listId   String
+  list     OfficialList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

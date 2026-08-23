@@ -48,6 +48,41 @@ const createEmptyForm = (): FormList => ({
   translations: [''],
 })
 
+const normalizeLanguage = (language: string) =>
+  language.trim().toLocaleLowerCase()
+
+const haveLanguagesChanged = (
+  list: ListSummary,
+  form: FormList
+) => {
+  const nextTranslationLanguages = new Set(
+    form.translations.map(normalizeLanguage)
+  )
+
+  return (
+    normalizeLanguage(list.language) !== normalizeLanguage(form.language) ||
+    list.translations.length !== form.translations.length ||
+    list.translations.some(
+      (language) => !nextTranslationLanguages.has(normalizeLanguage(language))
+    )
+  )
+}
+
+const isLanguageSwap = (list: ListSummary, form: FormList) => {
+  const previousSourceLanguage = normalizeLanguage(list.language)
+  const nextSourceLanguage = normalizeLanguage(form.language)
+
+  return (
+    previousSourceLanguage !== nextSourceLanguage &&
+    list.translations.some(
+      (language) => normalizeLanguage(language) === nextSourceLanguage
+    ) &&
+    form.translations.some(
+      (language) => normalizeLanguage(language) === previousSourceLanguage
+    )
+  )
+}
+
 type ListsPageProps = {
   initialLists: ListSummary[]
 }
@@ -159,9 +194,29 @@ export default function ListsPage({ initialLists }: ListsPageProps) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitting(true)
 
     const isEditing = editingId !== null
+    const editedList = isEditing
+      ? lists.find((list) => list.id === editingId)
+      : undefined
+    const needsLanguageChangeConfirmation =
+      editedList !== undefined &&
+      editedList.wordCount > 0 &&
+      haveLanguagesChanged(editedList, formList)
+    const swapsLanguages =
+      editedList !== undefined && isLanguageSwap(editedList, formList)
+    const confirmationMessage = swapsLanguages
+      ? `Inverser les langues échangera le mot principal, sa traduction correspondante et leurs notes pour les ${editedList.wordCount} mots. Voulez-vous continuer ?`
+      : `Modifier les langues conservera les ${editedList?.wordCount ?? 0} textes existants sans les traduire. Ils seront seulement réétiquetés. Voulez-vous continuer ?`
+
+    if (
+      needsLanguageChangeConfirmation &&
+      !window.confirm(confirmationMessage)
+    ) {
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       const response = await fetch(
@@ -176,6 +231,7 @@ export default function ListsPage({ initialLists }: ListsPageProps) {
               ? {
                   id: editingId,
                   ...formList,
+                  confirmLanguageChange: needsLanguageChangeConfirmation,
                 }
               : formList
           ),
@@ -230,8 +286,6 @@ export default function ListsPage({ initialLists }: ListsPageProps) {
 
       closeDialog()
     } catch (error) {
-      console.error(error)
-
       toast.error(
         error instanceof Error
           ? error.message

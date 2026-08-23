@@ -16,6 +16,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SpeakButton } from '@/components/ui/speak-button'
 
 type GameTranslation = { text: string; language: string; note?: string | null }
 type GameWord = {
@@ -27,6 +28,7 @@ type GameWord = {
 
 export type GameList = {
   id: string
+  source: 'personal' | 'official'
   name: string
   language: string
   translationLanguages: string[]
@@ -82,8 +84,12 @@ function getInitialTargetLanguage(list?: GameList) {
   return list?.translationLanguages[0] ?? ''
 }
 
-function getWordCacheKey(listId: string, language: string) {
-  return `${listId}:${language}`
+function getGameListKey(list: Pick<GameList, 'id' | 'source'>) {
+  return `${list.source}:${list.id}`
+}
+
+function getWordCacheKey(list: Pick<GameList, 'id' | 'source'>, language: string) {
+  return `${getGameListKey(list)}:${language}`
 }
 
 function isGameWord(value: unknown): value is GameWord {
@@ -105,13 +111,26 @@ function isGameWord(value: unknown): value is GameWord {
   )
 }
 
-export default function GamePage({ lists }: { lists: GameList[] }) {
+export default function GamePage({
+  lists,
+  initialListKey,
+}: {
+  lists: GameList[]
+  initialListKey?: string
+}) {
+  const requestedList = lists.find(
+    (list) => getGameListKey(list) === initialListKey
+  )
   const firstList =
+    requestedList ??
     lists.find(
       (list) => list.wordCount > 0 && list.translationLanguages.length > 0
-    ) ?? lists[0]
+    ) ??
+    lists[0]
   const [screen, setScreen] = useState<Screen>('setup')
-  const [selectedListId, setSelectedListId] = useState(firstList?.id ?? '')
+  const [selectedListKey, setSelectedListKey] = useState(
+    firstList ? getGameListKey(firstList) : ''
+  )
   const [targetLanguage, setTargetLanguage] = useState(
     getInitialTargetLanguage(firstList)
   )
@@ -128,12 +147,12 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
   const [setupError, setSetupError] = useState('')
 
   const selectedList = useMemo(
-    () => lists.find((list) => list.id === selectedListId),
-    [lists, selectedListId]
+    () => lists.find((list) => getGameListKey(list) === selectedListKey),
+    [lists, selectedListKey]
   )
 
   const wordCacheKey = selectedList
-    ? getWordCacheKey(selectedList.id, targetLanguage)
+    ? getWordCacheKey(selectedList, targetLanguage)
     : ''
   const cachedWords = wordCacheKey ? wordCache[wordCacheKey] : undefined
   const playableWords = cachedWords ?? []
@@ -158,9 +177,9 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
         : sourceAnswers.length >= 4 && targetAnswers.length >= 4
     : availableWordCount >= 4
 
-  function changeList(listId: string) {
-    const nextList = lists.find((list) => list.id === listId)
-    setSelectedListId(listId)
+  function changeList(listKey: string) {
+    const nextList = lists.find((list) => getGameListKey(list) === listKey)
+    setSelectedListKey(listKey)
     setTargetLanguage(getInitialTargetLanguage(nextList))
     setSetupError('')
   }
@@ -236,12 +255,16 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
     setSetupError('')
 
     try {
-      const cacheKey = getWordCacheKey(selectedList.id, targetLanguage)
+      const cacheKey = getWordCacheKey(selectedList, targetLanguage)
       let words = wordCache[cacheKey]
 
       if (words === undefined) {
+        const gamePath =
+          selectedList.source === 'official'
+            ? `/api/official-lists/${selectedList.id}/game`
+            : `/api/lists/${selectedList.id}/game`
         const response = await fetch(
-          `/api/lists/${selectedList.id}/game?language=${encodeURIComponent(targetLanguage)}`,
+          `${gamePath}?language=${encodeURIComponent(targetLanguage)}`,
           { cache: 'no-store' }
         )
         const data = (await response.json().catch(() => null)) as
@@ -406,9 +429,15 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <SelectField
                 label="Liste"
-                value={selectedListId}
+                value={selectedListKey}
                 onChange={changeList}
-                options={lists.map((list) => ({ value: list.id, label: list.name }))}
+                options={lists.map((list) => ({
+                  value: getGameListKey(list),
+                  label:
+                    list.source === 'official'
+                      ? `${list.name} · Officielle`
+                      : list.name,
+                }))}
               />
               <SelectField
                 label="Langue à traduire"
@@ -523,6 +552,14 @@ export default function GamePage({ lists }: { lists: GameList[] }) {
             <dl className="mt-5 grid gap-4 text-sm">
               <Stat label="Mots disponibles" value={availableWordCount} />
               <Stat
+                label="Source"
+                value={
+                  selectedList?.source === 'official'
+                    ? 'Bibliothèque officielle'
+                    : 'Liste personnelle'
+                }
+              />
+              <Stat
                 label="Questions prévues"
                 value={
                   amount === 'all'
@@ -594,9 +631,16 @@ function GameRound({
             <p className="mt-7 text-sm font-medium text-muted-foreground">
               Quelle est la traduction de
             </p>
-            <h1 className="mt-2 break-words text-3xl font-bold sm:text-5xl">
-              {question.prompt}
-            </h1>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <h1 className="break-words text-3xl font-bold sm:text-5xl">
+                {question.prompt}
+              </h1>
+              <SpeakButton
+                text={question.prompt}
+                language={question.promptLanguage}
+                className="size-9"
+              />
+            </div>
             {question.promptNote && (
               <p className="mx-auto mt-2 w-fit max-w-xl break-words rounded-lg bg-secondary px-3 py-1.5 text-sm text-muted-foreground sm:text-base">
                 <span className="font-semibold text-foreground">Note :</span>{' '}
@@ -748,13 +792,20 @@ function ResultsScreen({
                 <ResultValue
                   label="Mot"
                   value={finalResult.question.prompt}
+                  language={finalResult.question.promptLanguage}
                   note={finalResult.question.promptNote}
                 />
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Réponse attendue</p>
-                  <p className="break-words font-medium text-emerald-700">
-                    {finalResult.question.acceptedAnswers.join(' / ')}
-                  </p>
+                  <div className="flex min-w-0 items-center gap-1">
+                    <p className="min-w-0 break-words font-medium text-emerald-700">
+                      {finalResult.question.acceptedAnswers.join(' / ')}
+                    </p>
+                    <SpeakButton
+                      text={finalResult.question.acceptedAnswers[0]}
+                      language={finalResult.question.answerLanguage}
+                    />
+                  </div>
                   {wrongAnswers.length > 0 && (
                     <p className="mt-1 break-words text-xs text-muted-foreground">
                       Réponse{wrongAnswers.length > 1 ? 's' : ''} incorrecte{wrongAnswers.length > 1 ? 's' : ''} : {wrongAnswers.join(' · ')}
@@ -787,7 +838,7 @@ function Feedback({ result }: { result: AnswerResult }) {
       }`}
     >
       {result.correct ? <Check className="mt-0.5 size-5 shrink-0" /> : <X className="mt-0.5 size-5 shrink-0" />}
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="font-bold">{result.correct ? 'Bonne réponse !' : 'Pas tout à fait'}</p>
         {!result.correct && (
           <p className="mt-1 text-sm">
@@ -795,6 +846,10 @@ function Feedback({ result }: { result: AnswerResult }) {
           </p>
         )}
       </div>
+      <SpeakButton
+        text={result.question.acceptedAnswers[0]}
+        language={result.question.answerLanguage}
+      />
     </div>
   )
 }
@@ -878,16 +933,21 @@ function Stat({ label, value, last = false }: { label: string; value: React.Reac
 function ResultValue({
   label,
   value,
+  language,
   note,
 }: {
   label: string
   value: string
+  language: string
   note?: string | null
 }) {
   return (
     <div className="min-w-0">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="break-words font-semibold">{value}</p>
+      <div className="flex min-w-0 items-center gap-1">
+        <p className="min-w-0 break-words font-semibold">{value}</p>
+        <SpeakButton text={value} language={language} />
+      </div>
       {note && (
         <p className="mt-0.5 break-words text-xs text-muted-foreground">
           Note : {note}

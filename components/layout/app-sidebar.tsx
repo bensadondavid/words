@@ -47,7 +47,8 @@ export function AppSidebar({ user }: AppSidebarProps) {
       <SidebarContent>
         <SidebarMenu>
           <NavLink href="/account/home">Accueil</NavLink>
-          <NavLink href="/account/game">Jeu</NavLink>
+          <NavLink href="/account/test">Test</NavLink>
+          <NavLink href="/account/library">Bibliothèque</NavLink>
           <NavLink href="/account/lists">Listes</NavLink>
           <NavLink href="/account/words">Mots</NavLink>
           <NavLink href="/account/import">Importer</NavLink>

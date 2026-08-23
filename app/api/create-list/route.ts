@@ -5,20 +5,34 @@ import { withQueryProfile } from '@/lib/database/query-profiler'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-const listSchema = z.object({
-  name: z.string().trim().min(1).max(80),
-  language: z.string().trim().min(1).max(50),
-  translations: z
-    .array(z.string().trim().min(1).max(50))
-    .min(1)
-    .max(10)
-    .refine(
-      (languages) =>
-        new Set(languages.map((language) => language.toLocaleLowerCase())).size ===
-        languages.length,
-      { message: 'Chaque langue de traduction doit être unique.' }
-    ),
-})
+const listSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    language: z.string().trim().min(1).max(50),
+    translations: z
+      .array(z.string().trim().min(1).max(50))
+      .min(1)
+      .max(10)
+      .refine(
+        (languages) =>
+          new Set(languages.map(normalizeLanguage)).size === languages.length,
+        { message: 'Chaque langue de traduction doit être unique.' }
+      ),
+  })
+  .refine(
+    ({ language, translations }) =>
+      !translations.some(
+        (translation) => normalizeLanguage(translation) === normalizeLanguage(language)
+      ),
+    {
+      message: 'La langue source ne peut pas être une langue de traduction.',
+      path: ['translations'],
+    }
+  )
+
+function normalizeLanguage(language: string) {
+  return language.trim().toLocaleLowerCase()
+}
 
 export async function POST(request: Request) {
   return withQueryProfile('api:POST /api/create-list', () =>

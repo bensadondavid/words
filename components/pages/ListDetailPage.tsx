@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SpeakButton } from '@/components/ui/speak-button'
 
 export type ListDetail = {
   id: string
@@ -339,6 +340,7 @@ export default function ListDetailPage({
                       <p className="text-xs text-muted-foreground">{word.language}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
+                      <SpeakButton text={word.text} language={word.language} />
                       <Button
                         type="button"
                         variant="ghost"
@@ -367,8 +369,12 @@ export default function ListDetailPage({
                         <dt className="text-muted-foreground">
                           {translation.language}
                         </dt>
-                        <dd className="min-w-0 break-words text-right font-medium">
-                          {translation.text}
+                        <dd className="flex min-w-0 items-center justify-end gap-1 text-right font-medium">
+                          <span className="min-w-0 break-words">{translation.text}</span>
+                          <SpeakButton
+                            text={translation.text}
+                            language={translation.language}
+                          />
                         </dd>
                       </div>
                     ))}
@@ -400,18 +406,27 @@ export default function ListDetailPage({
                     >
                       <th
                         scope="row"
-                        className="break-words px-5 py-4 font-semibold text-primary"
+                        className="px-5 py-4 font-semibold text-primary"
                       >
-                        {word.text}
+                        <div className="flex min-w-0 items-center gap-1">
+                          <span className="min-w-0 break-words">{word.text}</span>
+                          <SpeakButton text={word.text} language={word.language} />
+                        </div>
                       </th>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                           {word.translations.map((translation) => (
-                            <p key={translation.id} className="min-w-0 break-words">
-                              <span className="text-muted-foreground">
-                                {translation.language} :{' '}
+                            <p key={translation.id} className="flex min-w-0 items-center gap-1">
+                              <span className="min-w-0 break-words">
+                                <span className="text-muted-foreground">
+                                  {translation.language} :{' '}
+                                </span>
+                                {translation.text}
                               </span>
-                              {translation.text}
+                              <SpeakButton
+                                text={translation.text}
+                                language={translation.language}
+                              />
                             </p>
                           ))}
                         </div>

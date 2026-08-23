@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, LoaderCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { SpeakButton } from '@/components/ui/speak-button'
 import type { WordFeedItem, WordsPageData } from '@/lib/words/types'
 
 type WordsPageProps = {
@@ -133,18 +134,27 @@ export default function WordsPage({ initialPage }: WordsPageProps) {
                     >
                       <th
                         scope="row"
-                        className="break-words px-5 py-4 font-semibold text-primary"
+                        className="px-5 py-4 font-semibold text-primary"
                       >
-                        {word.text}
+                        <div className="flex min-w-0 items-center gap-1">
+                          <span className="min-w-0 break-words">{word.text}</span>
+                          <SpeakButton text={word.text} language={word.language} />
+                        </div>
                       </th>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                           {word.translations.map((translation) => (
-                            <p key={translation.id} className="min-w-0 break-words">
-                              <span className="text-muted-foreground">
-                                {translation.language} :{' '}
+                            <p key={translation.id} className="flex min-w-0 items-center gap-1">
+                              <span className="min-w-0 break-words">
+                                <span className="text-muted-foreground">
+                                  {translation.language} :{' '}
+                                </span>
+                                {translation.text}
                               </span>
-                              {translation.text}
+                              <SpeakButton
+                                text={translation.text}
+                                language={translation.language}
+                              />
                             </p>
                           ))}
                         </div>
@@ -200,9 +210,12 @@ function WordCard({ word }: { word: WordFeedItem }) {
   return (
     <article className="w-full min-w-0 overflow-hidden rounded-xl border bg-card p-4 shadow-sm capitalize">
       <div className="min-w-0">
-        <h2 className="break-words text-lg font-semibold text-primary">
-          {word.text}
-        </h2>
+        <div className="flex min-w-0 items-center gap-1">
+          <h2 className="min-w-0 break-words text-lg font-semibold text-primary">
+            {word.text}
+          </h2>
+          <SpeakButton text={word.text} language={word.language} />
+        </div>
         <p className="mt-1 break-words text-xs text-muted-foreground">
           {word.language} · {word.list.name}
         </p>
@@ -215,8 +228,12 @@ function WordCard({ word }: { word: WordFeedItem }) {
             className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-2 text-sm"
           >
             <dt className="text-muted-foreground">{translation.language}</dt>
-            <dd className="min-w-0 break-words text-right font-medium">
-              {translation.text}
+            <dd className="flex min-w-0 items-center justify-end gap-1 text-right font-medium">
+              <span className="min-w-0 break-words">{translation.text}</span>
+              <SpeakButton
+                text={translation.text}
+                language={translation.language}
+              />
             </dd>
           </div>
         ))}
