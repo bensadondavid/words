@@ -116,7 +116,7 @@ export default function ParametersPage() {
     try {
       setAddingPasskey(true)
       const { error } = await authClient.passkey.addPasskey({
-        name: `Clé de ${user?.name ?? 'mon appareil'}`,
+        name: `Learning Words - Clé de ${user?.name ?? 'mon appareil'}`,
         authenticatorAttachment: 'platform',
       })
 
