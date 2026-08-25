@@ -306,7 +306,7 @@ async function renderHomePage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link href="/account/game">
+              <Link href="/account/test">
                 <Gamepad2 className="size-4" />
                 Jouer
               </Link>

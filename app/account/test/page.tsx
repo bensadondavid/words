@@ -10,7 +10,7 @@ type GamePageProps = {
 }
 
 export default async function Page({ searchParams }: GamePageProps) {
-  return withQueryProfile('page:/account/game', () => renderPage(searchParams))
+  return withQueryProfile('page:/account/test', () => renderPage(searchParams))
 }
 
 async function renderPage(searchParams: GamePageProps['searchParams']) {

@@ -233,7 +233,7 @@ export default function LibraryPage({
                 </span>
                 <Button asChild>
                   <Link
-                    href={`/account/game?list=${encodeURIComponent(`official:${list.id}`)}`}
+                    href={`/account/test?list=${encodeURIComponent(`official:${list.id}`)}`}
                   >
                     <Gamepad2 className="size-4" /> Jouer
                   </Link>

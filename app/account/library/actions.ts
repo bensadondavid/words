@@ -104,7 +104,7 @@ async function runPublishOfficialList(input: unknown) {
     })
 
     revalidatePath('/account/library')
-    revalidatePath('/account/game')
+    revalidatePath('/account/test')
 
     return { success: true, officialListId: officialList.id }
   } catch (error) {
@@ -134,7 +134,7 @@ async function runDeleteOfficialList(input: unknown) {
     if (!deleted.count) return { error: 'Liste officielle introuvable.' }
 
     revalidatePath('/account/library')
-    revalidatePath('/account/game')
+    revalidatePath('/account/test')
 
     return { success: true }
   } catch (error) {
